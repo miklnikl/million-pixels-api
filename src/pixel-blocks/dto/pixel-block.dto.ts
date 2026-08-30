@@ -15,10 +15,10 @@ export class PixelBlockDto {
   height: number;
 
   /** Type of content displayed in the pixel block. @example TEXT */
-  contentType: 'IMAGE' | 'TEXT';
+  contentType: 'IMAGE' | 'TEXT' | null;
 
   /** Content displayed in the pixel block. @example Hello! */
-  content?: string;
+  content?: string | null;
 
   /** Date and time when the pixel block was created. @example 2026-08-30T10:00:00.000Z */
   createdAt: Date;

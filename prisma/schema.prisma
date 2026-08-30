@@ -1,0 +1,25 @@
+generator client {
+  provider = "prisma-client"
+  output   = "../src/generated/prisma"
+}
+
+datasource db {
+  provider = "postgresql"
+}
+
+enum ContentType {
+  IMAGE
+  TEXT
+}
+
+model PixelBlock {
+  id          String       @id @default(uuid())
+  x           Int
+  y           Int
+  width       Int
+  height      Int
+  contentType ContentType?
+  content     String?
+  createdAt   DateTime     @default(now())
+  updatedAt   DateTime     @updatedAt
+}

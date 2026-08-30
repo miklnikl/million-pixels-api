@@ -2,71 +2,46 @@ import { Injectable, NotFoundException } from '@nestjs/common';
 import { PixelBlockDto } from './dto/pixel-block.dto.js';
 import { CreatePixelBlockDto } from './dto/create-pixel-block.dto.js';
 import { UpdatePixelBlockDto } from './dto/update-pixel-block.dto.js';
-
-const pixelBlocks: PixelBlockDto[] = [
-  {
-    id: '123',
-    x: 10,
-    y: 20,
-    width: 5,
-    height: 5,
-    contentType: 'TEXT',
-    createdAt: new Date(),
-    updatedAt: new Date(),
-    content: 'Hello!',
-  },
-];
+import { PrismaService } from '../prisma/prisma.service.js';
 
 @Injectable()
 export class PixelBlocksService {
-  findAll() {
-    return pixelBlocks;
+  constructor(private readonly prisma: PrismaService) {}
+
+  async findAll(): Promise<PixelBlockDto[]> {
+    return this.prisma.pixelBlock.findMany();
   }
 
-  findOne(id: string) {
-    const result = pixelBlocks.find((item) => item.id === id);
-    if (!result) {
+  async findOne(id: string): Promise<PixelBlockDto> {
+    const pixelBlock = await this.prisma.pixelBlock.findUnique({
+      where: { id },
+    });
+
+    if (!pixelBlock) {
       throw new NotFoundException(`Pixel block ${id} not found`);
     }
-    return result;
-  }
-
-  create(data: CreatePixelBlockDto) {
-    const pixelBlock: PixelBlockDto = {
-      id: crypto.randomUUID(),
-      createdAt: new Date(),
-      updatedAt: new Date(),
-      ...data,
-    };
-
-    pixelBlocks.push(pixelBlock);
 
     return pixelBlock;
   }
 
-  update(id: string, data: UpdatePixelBlockDto) {
-    let index = pixelBlocks.findIndex((item) => item.id === id);
-
-    if (index === -1) {
-      throw new NotFoundException(`Pixel block ${id} not found`);
-    }
-
-    const updatedPixelBlock = {
-      ...pixelBlocks[index],
-      ...data,
-      updatedAt: new Date(),
-    };
-    pixelBlocks[index] = updatedPixelBlock;
-    return updatedPixelBlock;
+  async create(data: CreatePixelBlockDto): Promise<PixelBlockDto> {
+    return this.prisma.pixelBlock.create({ data });
   }
 
-  delete(id: string) {
-    const index = pixelBlocks.findIndex((item) => item.id === id);
+  async update(id: string, data: UpdatePixelBlockDto): Promise<PixelBlockDto> {
+    await this.findOne(id);
 
-    if (index === -1) {
-      throw new NotFoundException(`Pixel block ${id} not found`);
-    }
+    return this.prisma.pixelBlock.update({
+      where: { id },
+      data,
+    });
+  }
 
-    pixelBlocks.splice(index, 1);
+  async delete(id: string): Promise<void> {
+    await this.findOne(id);
+
+    await this.prisma.pixelBlock.delete({
+      where: { id },
+    });
   }
 }
