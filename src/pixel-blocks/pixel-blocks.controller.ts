@@ -10,6 +10,7 @@ import {
   Put,
 } from '@nestjs/common';
 import {
+  ApiConflictResponse,
   ApiCreatedResponse,
   ApiNoContentResponse,
   ApiNotFoundResponse,
@@ -39,6 +40,9 @@ export class PixelBlocksController {
 
   @Post()
   @ApiCreatedResponse({ type: PixelBlockDto })
+  @ApiConflictResponse({
+    description: 'Pixel block overlaps an existing block',
+  })
   create(@Body() data: CreatePixelBlockDto): Promise<PixelBlockDto> {
     return this.pixelBlocksService.create(data);
   }
@@ -46,6 +50,9 @@ export class PixelBlocksController {
   @Put(':id')
   @ApiOkResponse({ type: PixelBlockDto })
   @ApiNotFoundResponse({ description: 'Pixel block not found' })
+  @ApiConflictResponse({
+    description: 'Pixel block overlaps an existing block',
+  })
   update(
     @Param('id') id: string,
     @Body() data: UpdatePixelBlockDto,
