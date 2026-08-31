@@ -14,7 +14,7 @@ type Rectangle = Pick<CreatePixelBlockDto, 'x' | 'y' | 'width' | 'height'>;
 export class PixelBlocksService {
   constructor(private readonly prisma: PrismaService) {}
 
-  private isOverlaping(a: Rectangle, b: Rectangle): boolean {
+  private isOverlapping(a: Rectangle, b: Rectangle): boolean {
     return (
       a.x < b.x + b.width &&
       a.x + a.width > b.x &&
@@ -37,7 +37,7 @@ export class PixelBlocksService {
       },
     });
 
-    if (pixelBlocks.some((block) => this.isOverlaping(candidate, block))) {
+    if (pixelBlocks.some((block) => this.isOverlapping(candidate, block))) {
       throw new ConflictException('Pixel block overlaps an existing block');
     }
   }
