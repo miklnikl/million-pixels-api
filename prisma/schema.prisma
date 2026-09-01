@@ -22,4 +22,5 @@ model PixelBlock {
   content     String?
   createdAt   DateTime     @default(now())
   updatedAt   DateTime     @updatedAt
+  colors      String[]     @default([])
 }

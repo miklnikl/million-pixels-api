@@ -1,4 +1,11 @@
-import { IsIn, IsInt, IsOptional, IsString, Min } from 'class-validator';
+import {
+  IsArray,
+  IsIn,
+  IsInt,
+  IsOptional,
+  IsString,
+  Min,
+} from 'class-validator';
 
 export class UpdatePixelBlockDto {
   /** Horizontal coordinate of the pixel block. @example 100 */
@@ -29,4 +36,9 @@ export class UpdatePixelBlockDto {
   @IsOptional()
   @IsString()
   content?: string;
+
+  /** Pixel Colors array should be width x height or empty @example ["#000000"] */
+  @IsOptional()
+  @IsArray()
+  colors: string[];
 }
