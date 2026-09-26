@@ -1,12 +1,16 @@
 import {
   ConflictException,
+  ForbiddenException,
   Injectable,
   NotFoundException,
 } from '@nestjs/common';
+import type { UserDto } from '../users/dto/user.dto.js';
 import { PixelBlockDto } from './dto/pixel-block.dto.js';
 import { CreatePixelBlockDto } from './dto/create-pixel-block.dto.js';
 import { UpdatePixelBlockDto } from './dto/update-pixel-block.dto.js';
 import { PrismaService } from '../prisma/prisma.service.js';
+
+type Actor = Pick<UserDto, 'id' | 'role'>;
 
 type Rectangle = Pick<CreatePixelBlockDto, 'x' | 'y' | 'width' | 'height'>;
 
@@ -42,6 +46,25 @@ export class PixelBlocksService {
     }
   }
 
+  private async resolveOwner(
+    ownerEmail: string | undefined,
+    actor: Actor,
+  ): Promise<string | undefined> {
+    if (ownerEmail === undefined) return undefined;
+    if (actor.role !== 'ADMIN') {
+      throw new ForbiddenException(
+        'Only administrators can change block ownership',
+      );
+    }
+    const owner = await this.prisma.user.findUnique({
+      where: { email: ownerEmail },
+      select: { id: true },
+    });
+    if (!owner)
+      throw new NotFoundException('No registered user with this email');
+    return owner.id;
+  }
+
   findAll(): Promise<PixelBlockDto[]> {
     return this.prisma.pixelBlock.findMany();
   }
@@ -58,24 +81,45 @@ export class PixelBlocksService {
     return pixelBlock;
   }
 
-  async create(data: CreatePixelBlockDto): Promise<PixelBlockDto> {
-    await this.ensureNoOverlap(data);
+  async create(
+    data: CreatePixelBlockDto,
+    actor: Actor,
+  ): Promise<PixelBlockDto> {
+    const { ownerEmail, ...blockData } = data;
+    const userId = (await this.resolveOwner(ownerEmail, actor)) ?? actor.id;
+    await this.ensureNoOverlap(blockData);
 
-    return this.prisma.pixelBlock.create({ data });
+    return this.prisma.pixelBlock.create({ data: { ...blockData, userId } });
   }
 
-  async update(id: string, data: UpdatePixelBlockDto): Promise<PixelBlockDto> {
-    await this.findOne(id);
-    await this.ensureNoOverlap(data, id);
+  async update(
+    id: string,
+    data: UpdatePixelBlockDto,
+    actor: Actor,
+  ): Promise<PixelBlockDto> {
+    const block = await this.findOne(id);
+    if (actor.role !== 'ADMIN' && block.userId !== actor.id) {
+      throw new ForbiddenException(
+        'Only the owner or an administrator can modify this block',
+      );
+    }
+    const { ownerEmail, ...blockData } = data;
+    const userId = await this.resolveOwner(ownerEmail, actor);
+    await this.ensureNoOverlap(blockData, id);
 
     return this.prisma.pixelBlock.update({
       where: { id },
-      data,
+      data: { ...blockData, ...(userId === undefined ? {} : { userId }) },
     });
   }
 
-  async delete(id: string): Promise<void> {
-    await this.findOne(id);
+  async delete(id: string, actor: Actor): Promise<void> {
+    const block = await this.findOne(id);
+    if (actor.role !== 'ADMIN' && block.userId !== actor.id) {
+      throw new ForbiddenException(
+        'Only the owner or an administrator can modify this block',
+      );
+    }
 
     await this.prisma.pixelBlock.delete({
       where: { id },

@@ -112,3 +112,27 @@ Nest is an MIT-licensed open source project. It can grow thanks to the sponsors 
 ## License
 
 Nest is [MIT licensed](https://github.com/nestjs/nest/blob/master/LICENSE).
+
+## Roles and first administrator
+
+Registration always creates a `USER`. An `ADMIN` can create, edit, and delete any
+block, including legacy blocks without an owner. Only administrators may set the
+optional `ownerEmail` field on `POST /pixel-blocks` or `PUT /pixel-blocks/:id`.
+It must identify an already registered user. Omitting it assigns new blocks to the
+caller and preserves the owner when editing. Unknown emails return 404; ordinary
+users attempting to set the owner receive 403. Role changes take effect on the
+next authenticated API request.
+
+To appoint the first administrator, register the account through the website,
+then run these commands in this backend project against the intended database:
+
+```bash
+npm run prisma:migrate:deploy
+npm run build
+npm run admin:promote -- user@example.com
+```
+
+Replace the example email with the registered account's exact email. The command
+only promotes an existing user; no public endpoint can assign roles. Refresh the
+website after promotion to load the administrator controls. In production, run
+the command in the backend environment with its database connection configured.

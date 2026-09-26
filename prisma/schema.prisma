@@ -23,4 +23,33 @@ model PixelBlock {
   createdAt   DateTime     @default(now())
   updatedAt   DateTime     @updatedAt
   colors      String[]     @default([])
+  user        User?        @relation(fields: [userId], references: [id])
+  userId      String?
+}
+
+enum Role {
+  USER
+  ADMIN
+}
+
+model User {
+  id           String   @id @default(uuid())
+  email        String   @unique
+  role         Role     @default(USER)
+  passwordHash String
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
+
+  sessions    Session[]
+  pixelBlocks PixelBlock[]
+}
+
+model Session {
+  tokenHash String   @id
+  userId    String
+  expiresAt DateTime
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId])
+  @@index([expiresAt])
 }

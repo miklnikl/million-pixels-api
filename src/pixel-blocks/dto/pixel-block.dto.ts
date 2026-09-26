@@ -10,6 +10,11 @@ import {
 } from 'class-validator';
 
 export class PixelBlockDto {
+  /** Owner of the block; null for legacy blocks. */
+  @IsOptional()
+  @IsUUID()
+  userId: string | null;
+
   /** Unique identifier of the pixel block. @example 550e8400-e29b-41d4-a716-446655440000 */
   @IsUUID()
   id: string;

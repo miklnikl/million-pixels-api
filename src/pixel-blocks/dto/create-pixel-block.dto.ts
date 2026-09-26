@@ -1,5 +1,7 @@
 import {
   IsArray,
+  IsEmail,
+  ValidateIf,
   IsIn,
   IsInt,
   IsOptional,
@@ -8,6 +10,11 @@ import {
 } from 'class-validator';
 
 export class CreatePixelBlockDto {
+  /** ADMIN only: email of an existing user to assign as owner. Omit to keep the current/default owner. */
+  @ValidateIf((_object, value) => value !== undefined)
+  @IsEmail()
+  ownerEmail?: string;
+
   /** Horizontal coordinate of the pixel block. @example 100 */
   @IsInt()
   @Min(0)

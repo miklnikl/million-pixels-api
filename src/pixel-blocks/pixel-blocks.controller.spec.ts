@@ -1,3 +1,4 @@
+import { SessionGuard } from '../auth/session.guard.js';
 import { Test, TestingModule } from '@nestjs/testing';
 import { PixelBlocksController } from './pixel-blocks.controller.js';
 import { PixelBlocksService } from './pixel-blocks.service.js';
@@ -25,7 +26,10 @@ describe('PixelBlocksController', () => {
           useValue: service,
         },
       ],
-    }).compile();
+    })
+      .overrideGuard(SessionGuard)
+      .useValue({ canActivate: () => true })
+      .compile();
 
     controller = module.get<PixelBlocksController>(PixelBlocksController);
   });
